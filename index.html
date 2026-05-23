@@ -4,1149 +4,559 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>圆角图标工坊</title>
-    <!-- PWA manifest -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="img/favicon-128.png">
-    <link rel="apple-touch-icon" href="img/favicon-192.png">
-    <meta name="theme-color" content="#1e5a8a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #f2f5f9;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
-            padding: 2rem 1.5rem;
-            color: #1e2f3e;
-        }
-
-        .app-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: transparent;
-        }
-
-        .header {
-            margin-bottom: 2rem;
-        }
-        .header h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: #0a2942;
-            letter-spacing: -0.3px;
-        }
-        .header p {
-            color: #4a627a;
-            margin-top: 0.3rem;
-            font-weight: 450;
-            border-left: 3px solid #2d7aff;
-            padding-left: 1rem;
-        }
-
-        .workspace {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-        }
-
-        .controls-panel {
-            flex: 1.2;
-            min-width: 280px;
-            background: white;
-            border-radius: 20px;
-            padding: 1.6rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-            border: 1px solid #e9edf2;
-        }
-
-        .preview-panel {
-            flex: 2;
-            min-width: 320px;
-            background: white;
-            border-radius: 20px;
-            padding: 1.8rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-            border: 1px solid #e9edf2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .upload-area {
-            background: #fafcff;
-            border: 1.5px dashed #cbdae9;
-            border-radius: 20px;
-            padding: 1.2rem 0.8rem;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-bottom: 1.4rem;
-        }
-        .upload-area:hover {
-            background: #f0f4fc;
-            border-color: #2d7aff;
-        }
-        .upload-label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            color: #2c577c;
-        }
-        .upload-icon {
-            font-size: 2.2rem;
-        }
-        input[type="file"] {
-            display: none;
-        }
-
-        .mode-toggle {
-            display: flex;
-            gap: 12px;
-            background: #f1f4f9;
-            padding: 5px;
-            border-radius: 60px;
-            margin: 1.2rem 0 1.2rem 0;
-        }
-        .mode-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            padding: 0.6rem 0;
-            border-radius: 40px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #3a5a7a;
-            transition: 0.2s;
-            font-size: 0.9rem;
-        }
-        .mode-btn.active {
-            background: white;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-            color: #1a5d9c;
-        }
-
-        .radius-control {
-            margin: 1.4rem 0;
-        }
-        .radius-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-        input[type="range"] {
-            width: 100%;
-            height: 5px;
-            -webkit-appearance: none;
-            background: #dbe2ec;
-            border-radius: 10px;
-        }
-        input[type="range"]:focus {
-            outline: none;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            background: #2d7aff;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid white;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-        }
-        .percent-value {
-            background: #eef2fa;
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-
-        .presets {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 1.5rem 0;
-        }
-        .preset-btn {
-            background: #f5f7fb;
-            border: 1px solid #dfe5ef;
-            padding: 6px 16px;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.1s;
-            color: #2c577c;
-        }
-        .preset-btn:hover {
-            background: #e7edf8;
-            border-color: #2d7aff;
-        }
-
-        .resolution-section {
-            background: #f8fafd;
-            border-radius: 18px;
-            padding: 1rem;
-            margin: 1rem 0 1rem 0;
-            border: 1px solid #e6ecf3;
-        }
-        .resolution-title {
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #1e4a76;
-        }
-        .resolution-control {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .width-input-group {
-            flex: 2;
-            min-width: 130px;
-        }
-        .width-input-group label {
-            font-size: 0.7rem;
-            color: #5f7d9c;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .width-input-group input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #cddae9;
-            border-radius: 16px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            background: white;
-            font-family: monospace;
-            letter-spacing: 0.3px;
-            transition: 0.1s;
-        }
-        .width-input-group input:focus {
-            border-color: #2d7aff;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(45, 122, 255, 0.1);
-        }
-        .height-info {
-            flex: 1;
-            background: #eef2f7;
-            border-radius: 16px;
-            padding: 8px 12px;
-            text-align: center;
-        }
-        .height-info span:first-child {
-            font-size: 0.7rem;
-            color: #5f7d9c;
-            display: block;
-        }
-        .height-info .height-value {
-            font-weight: 700;
-            font-size: 1rem;
-            color: #1f6392;
-        }
-        .preset-resolutions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
-        }
-        .res-preset {
-            background: white;
-            border: 1px solid #cfddee;
-            border-radius: 30px;
-            padding: 5px 12px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.1s;
-        }
-        .res-preset:hover {
-            background: #e3edfa;
-            border-color: #2d7aff;
-        }
-        .lock-hint {
-            font-size: 0.65rem;
-            color: #6e8eb0;
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .warning-tip {
-            background: #fff3e0;
-            border-left: 3px solid #ff9800;
-            padding: 6px 10px;
-            font-size: 0.7rem;
-            border-radius: 12px;
-            margin-top: 10px;
-            color: #aa6f00;
-        }
-
-        .download-btn {
-            background: #1e5a8a;
-            border: none;
-            width: 100%;
-            padding: 12px 0;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1rem;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            margin-top: 1rem;
-            transition: 0.15s;
-        }
-        .download-btn:hover {
-            background: #0f446b;
-            transform: scale(0.98);
-        }
-
-        /* 预览容器样式 */
-        .preview-canvas-wrapper {
-            background: repeating-conic-gradient(#f8fafd 0% 25%, #eef2f7 0% 50%) 50% / 20px 20px;
-            border-radius: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 12px;
-            box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.2);
-            min-width: 280px;
-            min-height: 280px;
-        }
-        canvas#previewCanvas {
-            display: block;
-            background: transparent;
-            border-radius: 12px;
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.03);
-            transition: width 0.05s ease, height 0.05s ease;
-        }
-        .info-note {
-            margin-top: 1rem;
-            font-size: 0.7rem;
-            color: #6b85a0;
-            text-align: center;
-        }
-        hr {
-            margin: 1rem 0;
-            border: 0;
-            height: 1px;
-            background: #e2e8f0;
-        }
-
-        /* 模态弹窗 (保留) */
-        .custom-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-        }
-        .custom-modal-card {
-            background: white;
-            max-width: 460px;
-            width: 85%;
-            border-radius: 32px;
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            animation: fadeSlideUp 0.2s ease-out;
-        }
-        @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .modal-header {
-            background: #1e5a8a;
-            color: white;
-            padding: 1rem 1.5rem;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-        .modal-body {
-            padding: 1.5rem;
-            background: #ffffff;
-        }
-        .modal-url-panel {
-            background: #f0f4fa;
-            padding: 12px;
-            border-radius: 18px;
-            font-size: 0.85rem;
-            word-break: break-all;
-            font-family: monospace;
-            border: 1px solid #dee4ed;
-            margin-bottom: 12px;
-            color: #1f4973;
-        }
-        .modal-download-hint {
-            font-size: 0.7rem;
-            color: #6f8eae;
-            margin-top: 5px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .modal-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 0 1.5rem 1.5rem 1.5rem;
-        }
-        .modal-action-top button {
-            width: 100%;
-            background: #1e5a8a;
-            border: none;
-            padding: 12px;
-            border-radius: 50px;
-            color: white;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: 0.1s;
-        }
-        .modal-action-bottom {
-            display: flex;
-            gap: 12px;
-        }
-        .modal-action-bottom button {
-            flex: 1;
-            background: #eef2f7;
-            border: 1px solid #cbdae9;
-            padding: 10px 0;
-            border-radius: 50px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.1s;
-            color: #2c577c;
-        }
-        .modal-action-bottom button:first-child {
-            background: #2d7aff20;
-            border-color: #2d7aff;
-            color: #1a5d9c;
-        }
-        .toast-msg {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e2f3ecc;
-            backdrop-filter: blur(8px);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 60px;
-            font-size: 0.8rem;
-            z-index: 10001;
-            pointer-events: none;
-            animation: fadeOut 2s forwards;
-        }
-        @keyframes fadeOut {
-            0% {
-                opacity: 0;
-                transform: translateX(-50%) translateY(10px);
-            }
-            15% {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-            85% {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-            100% {
-                opacity: 0;
-                transform: translateX(-50%) translateY(-8px);
-            }
-        }
-        @media (max-width: 700px) {
-            body {
-                padding: 1rem;
-            }
-            .controls-panel,
-            .preview-panel {
-                padding: 1.2rem;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f2f5f9; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; padding: 2rem 1.5rem; color: #1e2f3e; }
+        .app-container { max-width: 1400px; margin: 0 auto; background: transparent; }
+        .header { margin-bottom: 2rem; }
+        .header h1 { font-size: 1.8rem; font-weight: 600; color: #0a2942; }
+        .header p { color: #4a627a; margin-top: 0.3rem; border-left: 3px solid #2d7aff; padding-left: 1rem; }
+        .workspace { display: flex; flex-wrap: wrap; gap: 2rem; }
+        .controls-panel { flex: 1.2; min-width: 280px; background: white; border-radius: 20px; padding: 1.6rem; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #e9edf2; }
+        .preview-panel { flex: 2; min-width: 320px; background: white; border-radius: 20px; padding: 1.8rem; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #e9edf2; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .upload-area { background: #fafcff; border: 1.5px dashed #cbdae9; border-radius: 20px; padding: 1.2rem 0.8rem; text-align: center; cursor: pointer; transition: 0.2s; margin-bottom: 1.4rem; }
+        .upload-area:hover { background: #f0f4fc; border-color: #2d7aff; }
+        .upload-label { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; font-weight: 500; color: #2c577c; }
+        .upload-icon { font-size: 2.2rem; }
+        input[type="file"] { display: none; }
+        .mode-toggle { display: flex; gap: 12px; background: #f1f4f9; padding: 5px; border-radius: 60px; margin: 1.2rem 0; }
+        .mode-btn { flex: 1; background: transparent; border: none; padding: 0.6rem 0; border-radius: 40px; font-weight: 600; cursor: pointer; color: #3a5a7a; transition: 0.2s; font-size: 0.9rem; }
+        .mode-btn.active { background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.05); color: #1a5d9c; }
+        .radius-control { margin: 1.4rem 0; }
+        .radius-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 500; }
+        input[type="range"] { width: 100%; height: 5px; -webkit-appearance: none; background: #dbe2ec; border-radius: 10px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: #2d7aff; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+        .percent-value { background: #eef2fa; padding: 4px 12px; border-radius: 40px; font-weight: 600; font-size: 0.85rem; }
+        .presets { display: flex; flex-wrap: wrap; gap: 10px; margin: 1.5rem 0; }
+        .preset-btn { background: #f5f7fb; border: 1px solid #dfe5ef; padding: 6px 16px; border-radius: 40px; font-size: 0.8rem; font-weight: 500; cursor: pointer; color: #2c577c; }
+        .preset-btn:hover { background: #e7edf8; border-color: #2d7aff; }
+        .resolution-section { background: #f8fafd; border-radius: 18px; padding: 1rem; margin: 1rem 0; border: 1px solid #e6ecf3; }
+        .resolution-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: #1e4a76; }
+        .resolution-control { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .width-input-group { flex: 2; min-width: 130px; }
+        .width-input-group label { font-size: 0.7rem; color: #5f7d9c; display: block; margin-bottom: 4px; }
+        .width-input-group input { width: 100%; padding: 8px 10px; border: 1px solid #cddae9; border-radius: 16px; font-size: 0.9rem; font-weight: 500; background: white; font-family: monospace; }
+        .width-input-group input:focus { border-color: #2d7aff; outline: none; box-shadow: 0 0 0 2px rgba(45,122,255,0.1); }
+        .height-info { flex: 1; background: #eef2f7; border-radius: 16px; padding: 8px 12px; text-align: center; }
+        .height-info span:first-child { font-size: 0.7rem; color: #5f7d9c; display: block; }
+        .height-info .height-value { font-weight: 700; font-size: 1rem; color: #1f6392; }
+        .preset-resolutions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .res-preset { background: white; border: 1px solid #cfddee; border-radius: 30px; padding: 5px 12px; font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: 0.1s; }
+        .res-preset:hover { background: #e3edfa; border-color: #2d7aff; }
+        .lock-hint { font-size: 0.65rem; color: #6e8eb0; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+        .warning-tip { background: #fff3e0; border-left: 3px solid #ff9800; padding: 6px 10px; font-size: 0.7rem; border-radius: 12px; margin-top: 10px; color: #aa6f00; }
+        .download-btn { background: #1e5a8a; border: none; width: 100%; padding: 12px 0; border-radius: 50px; font-weight: 700; font-size: 1rem; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; margin-top: 1rem; transition: 0.15s; }
+        .download-btn:hover { background: #0f446b; transform: scale(0.98); }
+        .preview-canvas-wrapper { background: repeating-conic-gradient(#f8fafd 0% 25%, #eef2f7 0% 50%) 50% / 20px 20px; border-radius: 20px; display: inline-flex; padding: 8px; box-shadow: 0 12px 24px -12px rgba(0,0,0,0.2); justify-content: center; }
+        canvas#previewCanvas { display: block; background: transparent; border-radius: 12px; max-width: 100%; height: auto; box-shadow: none; }
+        .info-note { margin-top: 1rem; font-size: 0.7rem; color: #6b85a0; text-align: center; }
+        @media (max-width: 700px) { body { padding: 1rem; } .controls-panel, .preview-panel { padding: 1.2rem; } }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="header">
-            <h1>⚡ 圆角图标工坊 · 长图优化版</h1>
-            <p>智能缩放预览 | 流畅不卡顿 | 导出保留高清细节</p>
-        </div>
-
-        <div class="workspace">
-            <div class="controls-panel">
-                <div class="upload-area" id="uploadArea">
-                    <label class="upload-label">
-                        <span class="upload-icon">🖼️</span>
-                        <span>点击或拖拽上传图片</span>
-                        <span style="font-size:12px">JPG / PNG / WebP</span>
-                        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
-                    </label>
-                </div>
-
-                <div class="mode-toggle">
-                    <button class="mode-btn active" id="rectModeBtn">🔲 圆角矩形模式</button>
-                    <button class="mode-btn" id="circleModeBtn">⚪ 完全圆形模式</button>
-                </div>
-
-                <div id="radiusArea">
-                    <div class="radius-control">
-                        <div class="radius-header">
-                            <span>📐 圆角百分比</span>
-                            <span class="percent-value" id="percentValue">22%</span>
-                        </div>
-                        <input type="range" id="radiusSlider" min="0" max="50" step="1" value="22">
-                        <div class="info-note" style="margin-top: 6px; text-align: left;">* 基于输出图片短边的百分比</div>
-                    </div>
-                </div>
-
-                <div class="presets">
-                    <button class="preset-btn" data-percent="12">🍏 12% 小圆角</button>
-                    <button class="preset-btn" data-percent="18">📱 Material 18%</button>
-                    <button class="preset-btn" data-percent="22">🍎 iOS 风格 22%</button>
-                    <button class="preset-btn" data-percent="28">✨ 温和 28%</button>
-                    <button class="preset-btn" data-percent="50">🏷️ 胶囊 50%</button>
-                </div>
-
-                <div class="resolution-section" id="resolutionSection">
-                    <div class="resolution-title">
-                        📐 输出分辨率 · 锁定宽高比
-                    </div>
-                    <div class="resolution-control">
-                        <div class="width-input-group">
-                            <label>宽度 (px) · 自动等比</label>
-                            <input type="text" id="targetWidth" inputmode="numeric" autocomplete="off" placeholder="宽度数值">
-                        </div>
-                        <div class="height-info">
-                            <span>高度 (自动)</span>
-                            <span class="height-value" id="autoHeight">—</span>
-                        </div>
-                    </div>
-                    <div class="preset-resolutions">
-                        <span class="res-preset" data-width="64">64px</span>
-                        <span class="res-preset" data-width="72">72px</span>
-                        <span class="res-preset" data-width="96">96px</span>
-                        <span class="res-preset" data-width="128">128px</span>
-                        <span class="res-preset" data-width="192">192px</span>
-                        <span class="res-preset" data-width="256">256px</span>
-                        <span class="res-preset" data-width="512">512px</span>
-                        <span class="res-preset" data-width="768">768px</span>
-                        <span class="res-preset" data-width="1024">1024px</span>
-                        <span class="res-preset" id="resetToOriginalBtn" data-original="true">🔄 原图尺寸</span>
-                    </div>
-                    <div class="warning-tip" id="sizeWarnMsg" style="display: none;">⚠️ 移动端建议宽度 ≤ 1024px，过大可能导出较慢</div>
-                    <div class="lock-hint">
-                        🔒 预览画布动态适配，长图完整显示不拉伸
-                    </div>
-                </div>
-
-                <button class="download-btn" id="downloadBtn">💾 导出 PNG 图标</button>
-                <div class="info-note">导出时基于原图高清渲染，预览为优化画质保证流畅</div>
-            </div>
-
-            <div class="preview-panel">
-                <div class="preview-canvas-wrapper">
-                    <canvas id="previewCanvas"></canvas>
-                </div>
-                <div id="statusMsg" class="info-note" style="margin-top: 16px;">✨ 上传图片，预览画布自动适配长图比例 | 实时圆角效果</div>
-            </div>
-        </div>
+<div class="app-container">
+    <div class="header">
+        <h1>⚡ 圆角图标工坊</h1>
+        <p>无弹窗 · 实时圆角 | 等比缩放 | 高清导出</p>
     </div>
 
-    <script>
-        (function() {
-            // ---------- DOM 元素 ----------
-            const fileInput = document.getElementById('fileInput');
-            const previewCanvas = document.getElementById('previewCanvas');
-            const previewCtx = previewCanvas.getContext('2d');
-            const radiusSlider = document.getElementById('radiusSlider');
-            const percentSpan = document.getElementById('percentValue');
-            const rectModeBtn = document.getElementById('rectModeBtn');
-            const circleModeBtn = document.getElementById('circleModeBtn');
-            const downloadBtn = document.getElementById('downloadBtn');
-            const uploadArea = document.getElementById('uploadArea');
-            const targetWidthInput = document.getElementById('targetWidth');
-            const autoHeightSpan = document.getElementById('autoHeight');
-            const resPresetBtns = document.querySelectorAll('.res-preset');
-            const resetToOriginalBtn = document.getElementById('resetToOriginalBtn');
-            const sizeWarnMsg = document.getElementById('sizeWarnMsg');
-            const statusMsgDiv = document.getElementById('statusMsg');
+    <div class="workspace">
+        <div class="controls-panel">
+            <div class="upload-area" id="uploadArea">
+                <label class="upload-label">
+                    <span class="upload-icon">🖼️</span>
+                    <span>点击或拖拽上传图片</span>
+                    <span style="font-size:12px">JPG / PNG / WebP</span>
+                    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+                </label>
+            </div>
 
-            // ---------- 全局状态 ----------
-            let originalFullImage = null; // 原始完整图片 (用于导出)
-            let optimizedPreviewImage = null; // 优化后的预览图片 (限制最大边长 ≤1000)
-            let imageLoaded = false;
-            let originalAspectRatio = 1;
-            let originalImageWidth = 0,
-                originalImageHeight = 0;
+            <div class="mode-toggle">
+                <button class="mode-btn active" id="rectModeBtn">🔲 圆角矩形模式</button>
+                <button class="mode-btn" id="circleModeBtn">⚪ 完全圆形模式</button>
+            </div>
 
-            let targetWidth = 512; // 用户设定的输出宽度
-            let targetHeight = 512;
+            <div id="radiusArea">
+                <div class="radius-control">
+                    <div class="radius-header">
+                        <span>📐 圆角百分比</span>
+                        <span class="percent-value" id="percentValue">22%</span>
+                    </div>
+                    <input type="range" id="radiusSlider" min="0" max="50" step="1" value="22">
+                    <div class="info-note" style="margin-top: 6px; text-align: left;">* 基于输出图片短边的百分比</div>
+                </div>
+            </div>
 
-            let isCircle = false;
-            let currentPercent = 22;
+            <div class="presets">
+                <button class="preset-btn" data-percent="12">🍏 12% 小圆角</button>
+                <button class="preset-btn" data-percent="18">📱 Material 18%</button>
+                <button class="preset-btn" data-percent="22">🍎 iOS 风格 22%</button>
+                <button class="preset-btn" data-percent="28">✨ 温和 28%</button>
+                <button class="preset-btn" data-percent="50">🏷️ 胶囊 50%</button>
+            </div>
 
-            let renderTimer = null;
-            let isUpdatingFromCode = false;
-            let currentRequestId = 0; // 用于防止异步竞态
+            <div class="resolution-section">
+                <div class="resolution-title">📐 输出分辨率 · 锁定宽高比</div>
+                <div class="resolution-control">
+                    <div class="width-input-group">
+                        <label>宽度 (px) · 自动等比</label>
+                        <input type="text" id="targetWidth" inputmode="numeric" autocomplete="off" placeholder="宽度数值">
+                    </div>
+                    <div class="height-info">
+                        <span>高度 (自动)</span>
+                        <span class="height-value" id="autoHeight">—</span>
+                    </div>
+                </div>
+                <div class="preset-resolutions">
+                    <span class="res-preset" data-width="64">64px</span>
+                    <span class="res-preset" data-width="72">72px</span>
+                    <span class="res-preset" data-width="96">96px</span>
+                    <span class="res-preset" data-width="128">128px</span>
+                    <span class="res-preset" data-width="192">192px</span>
+                    <span class="res-preset" data-width="256">256px</span>
+                    <span class="res-preset" data-width="512">512px</span>
+                    <span class="res-preset" data-width="768">768px</span>
+                    <span class="res-preset" data-width="1024">1024px</span>
+                    <span class="res-preset" id="resetToOriginalBtn">🔄 原图尺寸</span>
+                </div>
+                <div class="warning-tip" id="sizeWarnMsg" style="display: none;">⚠️ 移动端建议宽度 ≤ 1024px，过大可能导出较慢</div>
+                <div class="lock-hint">🔒 预览画布根据输出比例动态调整 · 导出生成高清PNG</div>
+            </div>
 
-            // ---------- 工具函数 ----------
-            function showToast(msg) {
-                let toast = document.createElement('div');
-                toast.className = 'toast-msg';
-                toast.innerText = msg;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 2000);
+            <button class="download-btn" id="downloadBtn">💾 导出 PNG 图标</button>
+            <div class="info-note">导出文件将保存至“下载”目录</div>
+        </div>
+
+        <div class="preview-panel">
+            <div class="preview-canvas-wrapper">
+                <canvas id="previewCanvas"></canvas>
+            </div>
+            <div id="statusMsg" class="info-note" style="margin-top: 16px;">✨ 上传图片，圆角/尺寸实时预览 | 无弹窗设计</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // DOM 元素
+        const fileInput = document.getElementById('fileInput');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const previewCtx = previewCanvas.getContext('2d');
+        const radiusSlider = document.getElementById('radiusSlider');
+        const percentSpan = document.getElementById('percentValue');
+        const rectModeBtn = document.getElementById('rectModeBtn');
+        const circleModeBtn = document.getElementById('circleModeBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const uploadArea = document.getElementById('uploadArea');
+        const targetWidthInput = document.getElementById('targetWidth');
+        const autoHeightSpan = document.getElementById('autoHeight');
+        const resPresetBtns = document.querySelectorAll('.res-preset');
+        const resetToOriginalBtn = document.getElementById('resetToOriginalBtn');
+        const sizeWarnMsg = document.getElementById('sizeWarnMsg');
+        const statusMsgDiv = document.getElementById('statusMsg');
+        
+        let originalFullImage = null;
+        let optimizedPreviewImage = null;
+        let imageLoaded = false;
+        let originalAspectRatio = 1;
+        let originalImageWidth = 0, originalImageHeight = 0;
+        let targetWidth = 512;
+        let targetHeight = 512;
+        let isCircle = false;
+        let currentPercent = 22;
+        let renderTimer = null;
+        let isUpdatingFromCode = false;
+        
+        // 更新状态栏消息 (无弹窗)
+        function setStatusMessage(msg, isError = false) {
+            statusMsgDiv.innerHTML = msg;
+            if (isError) {
+                setTimeout(() => {
+                    if (statusMsgDiv.innerHTML === msg) {
+                        statusMsgDiv.innerHTML = imageLoaded ? `✅ 图片已加载 (${originalImageWidth}×${originalImageHeight}) | 可继续调整` : '✨ 上传图片，圆角/尺寸实时预览';
+                    }
+                }, 2500);
+            } else if (!imageLoaded) {
+                // 保留普通消息
             }
-
-            // 根据宽度更新高度（基于原始比例）
-            function updateHeightFromRatio(widthVal) {
-                if (!imageLoaded || !originalAspectRatio) {
-                    targetHeight = widthVal;
-                    autoHeightSpan.innerText = Math.round(targetHeight);
-                    return targetHeight;
-                }
-                const computed = widthVal / originalAspectRatio;
-                targetHeight = Math.round(computed);
-                autoHeightSpan.innerText = targetHeight;
+        }
+        
+        // 更新预览画布尺寸 (动态适应输出宽高比)
+        function updatePreviewCanvasSize() {
+            if (!imageLoaded) {
+                previewCanvas.width = 300;
+                previewCanvas.height = 300;
+                previewCanvas.style.width = 'auto';
+                previewCanvas.style.height = 'auto';
+                return;
+            }
+            const maxDim = 400;
+            let ratio = targetWidth / targetHeight;
+            let drawWidth, drawHeight;
+            if (ratio >= 1) {
+                drawWidth = maxDim;
+                drawHeight = maxDim / ratio;
+            } else {
+                drawHeight = maxDim;
+                drawWidth = maxDim * ratio;
+            }
+            previewCanvas.width = drawWidth;
+            previewCanvas.height = drawHeight;
+            previewCanvas.style.width = `${drawWidth}px`;
+            previewCanvas.style.height = `${drawHeight}px`;
+        }
+        
+        function updateHeightFromRatio(widthVal) {
+            if (!imageLoaded || !originalAspectRatio) {
+                targetHeight = widthVal;
+                autoHeightSpan.innerText = Math.round(targetHeight);
                 return targetHeight;
             }
-
-            const MAX_SAFE_WIDTH = 1024;
-
-            function clampTargetWidth(w) {
-                let clamped = Math.min(3000, Math.max(16, w));
-                if (clamped > MAX_SAFE_WIDTH && sizeWarnMsg) {
-                    sizeWarnMsg.style.display = 'block';
-                } else if (sizeWarnMsg) {
-                    sizeWarnMsg.style.display = 'none';
-                }
-                return clamped;
+            const computed = widthVal / originalAspectRatio;
+            targetHeight = Math.round(computed);
+            autoHeightSpan.innerText = targetHeight;
+            return targetHeight;
+        }
+        
+        const MAX_SAFE_WIDTH = 1024;
+        function clampTargetWidth(w) {
+            let clamped = Math.min(3000, Math.max(16, w));
+            if (clamped > MAX_SAFE_WIDTH && sizeWarnMsg) {
+                sizeWarnMsg.style.display = 'block';
+            } else if (sizeWarnMsg) {
+                sizeWarnMsg.style.display = 'none';
             }
-
-            function applyTargetWidth(widthVal, immediateRebuild = false) {
-                let w = parseInt(widthVal, 10);
-                if (isNaN(w)) return false;
-                w = clampTargetWidth(w);
-                if (w === targetWidth && imageLoaded) return false;
-                targetWidth = w;
-                updateHeightFromRatio(targetWidth);
-                if (!isUpdatingFromCode && targetWidthInput.value !== String(targetWidth)) {
-                    isUpdatingFromCode = true;
-                    targetWidthInput.value = targetWidth;
-                    isUpdatingFromCode = false;
-                }
-                if (imageLoaded && immediateRebuild) {
-                    if (renderTimer) clearTimeout(renderTimer);
-                    refreshPreview();
-                } else if (imageLoaded) {
-                    if (renderTimer) clearTimeout(renderTimer);
-                    renderTimer = setTimeout(() => {
-                        refreshPreview();
-                        renderTimer = null;
-                    }, 160);
-                }
-                return true;
-            }
-
-            function resetToOriginalSize() {
-                if (!imageLoaded) return;
-                let originalW = originalImageWidth;
-                applyTargetWidth(originalW, true);
-            }
-
-            // ----- 核心绘图函数：圆角矩形 / 圆形裁剪 (使用 contain 模式确保完整显示) -----
-            function drawRoundedOnCanvas(ctx, canvasWidth, canvasHeight, srcImg, radiusPercent, isCircleMode) {
-                if (!srcImg) return;
-                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-                ctx.imageSmoothingQuality = 'high';
-
-                // ---- 使用 contain 模式绘制，确保图片完整可见且不变形 ----
-                const imgRatio = srcImg.width / srcImg.height;
-                const canvasRatio = canvasWidth / canvasHeight;
-                let drawX, drawY, drawW, drawH;
-
-                if (imgRatio > canvasRatio) {
-                    // 图片更宽：按宽度缩放，居中显示
-                    drawW = canvasWidth;
-                    drawH = canvasWidth / imgRatio;
-                    drawX = 0;
-                    drawY = (canvasHeight - drawH) / 2;
-                } else {
-                    // 图片更高：按高度缩放，居中显示
-                    drawH = canvasHeight;
-                    drawW = canvasHeight * imgRatio;
-                    drawX = (canvasWidth - drawW) / 2;
-                    drawY = 0;
-                }
-
-                // ---- 应用裁剪蒙版 ----
-                if (isCircleMode) {
-                    const radius = Math.min(canvasWidth, canvasHeight) / 2;
-                    const cx = canvasWidth / 2;
-                    const cy = canvasHeight / 2;
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-                    ctx.clip();
-                    ctx.drawImage(srcImg, drawX, drawY, drawW, drawH);
-                    ctx.restore();
-                } else {
-                    const shortSide = Math.min(canvasWidth, canvasHeight);
-                    let radiusPx = (radiusPercent / 100) * shortSide;
-                    const maxRadius = shortSide / 2;
-                    radiusPx = Math.min(radiusPx, maxRadius);
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.moveTo(radiusPx, 0);
-                    ctx.lineTo(canvasWidth - radiusPx, 0);
-                    ctx.quadraticCurveTo(canvasWidth, 0, canvasWidth, radiusPx);
-                    ctx.lineTo(canvasWidth, canvasHeight - radiusPx);
-                    ctx.quadraticCurveTo(canvasWidth, canvasHeight, canvasWidth - radiusPx, canvasHeight);
-                    ctx.lineTo(radiusPx, canvasHeight);
-                    ctx.quadraticCurveTo(0, canvasHeight, 0, canvasHeight - radiusPx);
-                    ctx.lineTo(0, radiusPx);
-                    ctx.quadraticCurveTo(0, 0, radiusPx, 0);
-                    ctx.closePath();
-                    ctx.clip();
-                    ctx.drawImage(srcImg, drawX, drawY, drawW, drawH);
-                    ctx.restore();
-                }
-            }
-
-            // ================== 长图优化核心代码 ==================
-            /**
-             * 构建优化后的预览图像 (限制最大边长，降低内存占用)
-             * @param {HTMLImageElement} originalImg 原图
-             * @param {number} maxEdge 最大边长 (默认 1000)
-             * @returns {Promise<HTMLImageElement>} 优化后的 Image 对象
-             */
-            function buildOptimizedPreviewImage(originalImg, maxEdge = 1000) {
-                return new Promise((resolve) => {
-                    const imgWidth = originalImg.width;
-                    const imgHeight = originalImg.height;
-                    let targetW = imgWidth;
-                    let targetH = imgHeight;
-                    const maxSide = Math.max(imgWidth, imgHeight);
-
-                    if (maxSide > maxEdge) {
-                        const scale = maxEdge / maxSide;
-                        targetW = Math.round(imgWidth * scale);
-                        targetH = Math.round(imgHeight * scale);
-                    }
-
-                    const offCanvas = document.createElement('canvas');
-                    offCanvas.width = targetW;
-                    offCanvas.height = targetH;
-                    const offCtx = offCanvas.getContext('2d');
-                    offCtx.imageSmoothingQuality = 'medium';
-                    offCtx.drawImage(originalImg, 0, 0, targetW, targetH);
-
-                    const optimizedImg = new Image();
-                    optimizedImg.onload = () => resolve(optimizedImg);
-                    optimizedImg.src = offCanvas.toDataURL('image/png');
-                });
-            }
-
-            /**
-             * 动态调整预览画布尺寸（基于输出宽高比，最大边长 400px，最小短边 180px）
-             * 专为长图优化：避免短边被压缩到无法看清
-             */
-            function updatePreviewCanvasSize(outWidth, outHeight) {
-                const MAX_PREVIEW = 400;
-                const MIN_DIMENSION = 180; // 最小短边尺寸（保障长图预览清晰度）
-                let ratio = outWidth / outHeight;
-                let drawWidth, drawHeight;
-
-                if (ratio >= 1) {
-                    drawWidth = MAX_PREVIEW;
-                    drawHeight = Math.round(MAX_PREVIEW / ratio);
-                    // 如果高度太小（长图横向），强制提升到 MIN_DIMENSION
-                    if (drawHeight < MIN_DIMENSION) {
-                        drawHeight = MIN_DIMENSION;
-                        drawWidth = Math.round(MIN_DIMENSION * ratio);
-                        // 但宽度不能超过 MAX_PREVIEW * 2（避免过大）
-                        if (drawWidth > MAX_PREVIEW * 2) drawWidth = MAX_PREVIEW * 2;
-                    }
-                } else {
-                    drawHeight = MAX_PREVIEW;
-                    drawWidth = Math.round(MAX_PREVIEW * ratio);
-                    // 如果宽度太小（长图纵向），强制提升到 MIN_DIMENSION
-                    if (drawWidth < MIN_DIMENSION) {
-                        drawWidth = MIN_DIMENSION;
-                        drawHeight = Math.round(MIN_DIMENSION / ratio);
-                        // 但高度不能超过 MAX_PREVIEW * 2
-                        if (drawHeight > MAX_PREVIEW * 2) drawHeight = MAX_PREVIEW * 2;
-                    }
-                }
-
-                // 保证至少 1px
-                drawWidth = Math.max(1, drawWidth);
-                drawHeight = Math.max(1, drawHeight);
-
-                if (previewCanvas.width !== drawWidth || previewCanvas.height !== drawHeight) {
-                    previewCanvas.width = drawWidth;
-                    previewCanvas.height = drawHeight;
-                    previewCanvas.style.width = `${drawWidth}px`;
-                    previewCanvas.style.height = `${drawHeight}px`;
-                }
-            }
-
-            /**
-             * 刷新预览：使用优化后的图片，应用到圆角/圆形裁剪
-             */
-            function refreshPreview() {
-                if (!imageLoaded || !optimizedPreviewImage) {
-                    // 清空并显示占位
-                    previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-                    previewCtx.fillStyle = "#8ba3bc";
-                    previewCtx.font = "14px system-ui";
-                    previewCtx.textAlign = "center";
-                    previewCtx.textBaseline = "middle";
-                    previewCtx.fillText("📸 等待图片", previewCanvas.width / 2, previewCanvas.height / 2);
-                    return;
-                }
-
-                // 根据当前输出尺寸调整预览画布大小（含最小短边保护）
-                updatePreviewCanvasSize(targetWidth, targetHeight);
-
-                const drawWidth = previewCanvas.width;
-                const drawHeight = previewCanvas.height;
-
-                // 创建临时画布用于绘制完整图像 (再应用裁剪)
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = drawWidth;
-                tempCanvas.height = drawHeight;
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.imageSmoothingQuality = 'medium';
-                // 用 contain 模式绘制到临时画布
-                const imgRatio = optimizedPreviewImage.width / optimizedPreviewImage.height;
-                const canvasRatio = drawWidth / drawHeight;
-                let sx, sy, sw, sh;
-                if (imgRatio > canvasRatio) {
-                    sw = drawWidth;
-                    sh = drawWidth / imgRatio;
-                    sx = 0;
-                    sy = (drawHeight - sh) / 2;
-                } else {
-                    sh = drawHeight;
-                    sw = drawHeight * imgRatio;
-                    sx = (drawWidth - sw) / 2;
-                    sy = 0;
-                }
-                tempCtx.drawImage(optimizedPreviewImage, sx, sy, sw, sh);
-
-                // 应用圆角或圆形裁剪
-                drawRoundedOnCanvas(previewCtx, drawWidth, drawHeight, tempCanvas, currentPercent, isCircle);
-            }
-
-            // ----- 图片加载流程（核心优化入口）-----
-            async function onImageLoaded(imgElement) {
-                // 释放之前的资源
-                if (originalFullImage) {
-                    originalFullImage = null;
-                }
-                if (optimizedPreviewImage) {
-                    optimizedPreviewImage = null;
-                }
-
-                originalFullImage = imgElement;
-                originalImageWidth = imgElement.width;
-                originalImageHeight = imgElement.height;
-                originalAspectRatio = imgElement.width / imgElement.height;
-                imageLoaded = true;
-
-                statusMsgDiv.innerHTML = `📷 原图 ${originalImageWidth}×${originalImageHeight}，正在生成优化预览...`;
-
-                const rid = ++currentRequestId;
-                const optimizedImg = await buildOptimizedPreviewImage(originalFullImage, 1000);
-                if (rid !== currentRequestId) {
-                    return; // 异步竞态，放弃过期结果
-                }
-                optimizedPreviewImage = optimizedImg;
-
-                // 设置默认输出宽度（原图宽度不超过1024则保持，否则限制到1024）
-                let initWidth = originalImageWidth;
-                if (initWidth > 1024) initWidth = 1024;
-                targetWidth = initWidth;
+            return clamped;
+        }
+        
+        function applyTargetWidth(widthVal, immediateRebuild = false) {
+            let w = parseInt(widthVal, 10);
+            if (isNaN(w)) return false;
+            w = clampTargetWidth(w);
+            if (w === targetWidth && imageLoaded) return false;
+            targetWidth = w;
+            updateHeightFromRatio(targetWidth);
+            if (!isUpdatingFromCode && targetWidthInput.value !== String(targetWidth)) {
+                isUpdatingFromCode = true;
                 targetWidthInput.value = targetWidth;
-                updateHeightFromRatio(targetWidth);
-
+                isUpdatingFromCode = false;
+            }
+            updatePreviewCanvasSize();
+            if (imageLoaded && immediateRebuild) {
+                if (renderTimer) clearTimeout(renderTimer);
                 refreshPreview();
-                statusMsgDiv.innerHTML =
-                `✅ 图片就绪 (${originalImageWidth}×${originalImageHeight}) | 预览已优化 · 长图友好`;
-            }
-
-            // 从文件加载
-            function loadImageFromFile(file) {
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = async () => {
-                        await onImageLoaded(img);
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-
-            // ---------- 导出高清图 (基于原图) ----------
-            async function exportHighQuality() {
-                if (!imageLoaded || !originalFullImage) {
-                    alert('请先上传图片');
-                    return;
-                }
-                const exportW = targetWidth;
-                const exportH = targetHeight;
-                if (exportW <= 0 || exportH <= 0) {
-                    alert('输出尺寸无效');
-                    return;
-                }
-                const originalStatus = statusMsgDiv.innerHTML;
-                statusMsgDiv.innerHTML = `⏳ 正在生成高清图标 ${exportW}×${exportH} ... 请稍后`;
-                try {
-                    const exportCanvas = document.createElement('canvas');
-                    exportCanvas.width = exportW;
-                    exportCanvas.height = exportH;
-                    const exportCtx = exportCanvas.getContext('2d');
-                    exportCtx.imageSmoothingQuality = 'high';
-
-                    // 临时画布承载完整图像（使用 contain 模式）
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = exportW;
-                    tempCanvas.height = exportH;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    tempCtx.imageSmoothingQuality = 'high';
-
-                    const imgRatio = originalFullImage.width / originalFullImage.height;
-                    const canvasRatio = exportW / exportH;
-                    let sx, sy, sw, sh;
-                    if (imgRatio > canvasRatio) {
-                        sw = exportW;
-                        sh = exportW / imgRatio;
-                        sx = 0;
-                        sy = (exportH - sh) / 2;
-                    } else {
-                        sh = exportH;
-                        sw = exportH * imgRatio;
-                        sx = (exportW - sw) / 2;
-                        sy = 0;
-                    }
-                    tempCtx.drawImage(originalFullImage, sx, sy, sw, sh);
-
-                    // 应用圆角裁剪
-                    drawRoundedOnCanvas(exportCtx, exportW, exportH, tempCanvas, currentPercent, isCircle);
-
-                    const link = document.createElement('a');
-                    const dataURL = exportCanvas.toDataURL('image/png');
-                    const modeName = isCircle ? 'circle' : `radius${currentPercent}`;
-                    link.download = `icon_${modeName}_${exportW}x${exportH}.png`;
-                    link.href = dataURL;
-                    link.click();
-                    statusMsgDiv.innerHTML = `✨ 已导出 ${exportW}×${exportH} 高清图标 (PNG)`;
-                    setTimeout(() => {
-                        if (imageLoaded) statusMsgDiv.innerHTML =
-                            `✅ 图片已加载 (${originalImageWidth}×${originalImageHeight}) | 可继续调整`;
-                    }, 2500);
-                } catch (err) {
-                    console.error(err);
-                    alert('导出失败，请重试或降低分辨率');
-                    statusMsgDiv.innerHTML = originalStatus;
-                }
-            }
-
-            // ---------- 模式切换 ----------
-            function setRectMode() {
-                if (!isCircle) return;
-                isCircle = false;
-                rectModeBtn.classList.add('active');
-                circleModeBtn.classList.remove('active');
-                radiusSlider.disabled = false;
-                document.getElementById('radiusArea').style.opacity = '1';
-                if (imageLoaded) refreshPreview();
-            }
-
-            function setCircleMode() {
-                if (isCircle) return;
-                isCircle = true;
-                circleModeBtn.classList.add('active');
-                rectModeBtn.classList.remove('active');
-                radiusSlider.disabled = true;
-                document.getElementById('radiusArea').style.opacity = '0.6';
-                if (imageLoaded) refreshPreview();
-            }
-
-            function updatePercent(value) {
-                currentPercent = Math.min(50, Math.max(0, value));
-                radiusSlider.value = currentPercent;
-                percentSpan.innerText = currentPercent + '%';
-                if (!isCircle && imageLoaded) {
+            } else if (imageLoaded) {
+                if (renderTimer) clearTimeout(renderTimer);
+                renderTimer = setTimeout(() => {
                     refreshPreview();
-                }
+                    renderTimer = null;
+                }, 160);
             }
-
-            // 智能宽度输入防抖
-            function initSmartWidthInput() {
-                targetWidthInput.addEventListener('input', function(e) {
-                    if (isUpdatingFromCode) return;
-                    let raw = e.target.value;
-                    if (raw === '') return;
+            return true;
+        }
+        
+        function resetToOriginalSize() {
+            if (!imageLoaded) return;
+            let originalW = originalImageWidth;
+            applyTargetWidth(originalW, true);
+            setStatusMessage(`↺ 恢复原图宽度 ${originalW}px`, false);
+        }
+        
+        // 绘制圆角/圆形裁剪函数
+        function drawRoundedOnCanvas(ctx, canvasWidth, canvasHeight, srcImg, radiusPercent, isCircleMode) {
+            if (!srcImg) return;
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            ctx.imageSmoothingQuality = 'high';
+            ctx.save();
+            if (isCircleMode) {
+                const radius = Math.min(canvasWidth, canvasHeight) / 2;
+                const cx = canvasWidth / 2;
+                const cy = canvasHeight / 2;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.drawImage(srcImg, 0, 0, canvasWidth, canvasHeight);
+            } else {
+                const shortSide = Math.min(canvasWidth, canvasHeight);
+                let radiusPx = (radiusPercent / 100) * shortSide;
+                const maxRadius = shortSide / 2;
+                radiusPx = Math.min(radiusPx, maxRadius);
+                ctx.beginPath();
+                ctx.moveTo(radiusPx, 0);
+                ctx.lineTo(canvasWidth - radiusPx, 0);
+                ctx.quadraticCurveTo(canvasWidth, 0, canvasWidth, radiusPx);
+                ctx.lineTo(canvasWidth, canvasHeight - radiusPx);
+                ctx.quadraticCurveTo(canvasWidth, canvasHeight, canvasWidth - radiusPx, canvasHeight);
+                ctx.lineTo(radiusPx, canvasHeight);
+                ctx.quadraticCurveTo(0, canvasHeight, 0, canvasHeight - radiusPx);
+                ctx.lineTo(0, radiusPx);
+                ctx.quadraticCurveTo(0, 0, radiusPx, 0);
+                ctx.closePath();
+                ctx.clip();
+                ctx.drawImage(srcImg, 0, 0, canvasWidth, canvasHeight);
+            }
+            ctx.restore();
+        }
+        
+        function refreshPreview() {
+            if (!imageLoaded || !optimizedPreviewImage) {
+                previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+                previewCtx.font = "14px system-ui";
+                previewCtx.fillStyle = "#8ba3bc";
+                previewCtx.textAlign = "center";
+                previewCtx.fillText("📸 等待图片", previewCanvas.width/2, previewCanvas.height/2);
+                return;
+            }
+            const drawWidth = previewCanvas.width;
+            const drawHeight = previewCanvas.height;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = drawWidth;
+            tempCanvas.height = drawHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(optimizedPreviewImage, 0, 0, drawWidth, drawHeight);
+            drawRoundedOnCanvas(previewCtx, drawWidth, drawHeight, tempCanvas, currentPercent, isCircle);
+        }
+        
+        // 构建轻量级预览图像 (保持清晰度 & 性能)
+        function buildOptimizedPreviewImage(originalImg, maxEdge = 1100) {
+            return new Promise((resolve) => {
+                const imgWidth = originalImg.width;
+                const imgHeight = originalImg.height;
+                let targetW = imgWidth;
+                let targetH = imgHeight;
+                const maxSide = Math.max(imgWidth, imgHeight);
+                if (maxSide > maxEdge) {
+                    const scale = maxEdge / maxSide;
+                    targetW = Math.round(imgWidth * scale);
+                    targetH = Math.round(imgHeight * scale);
+                }
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = targetW;
+                offCanvas.height = targetH;
+                const offCtx = offCanvas.getContext('2d');
+                offCtx.imageSmoothingQuality = 'high';
+                offCtx.drawImage(originalImg, 0, 0, targetW, targetH);
+                const optimizedImg = new Image();
+                optimizedImg.onload = () => resolve(optimizedImg);
+                optimizedImg.src = offCanvas.toDataURL('image/png');
+            });
+        }
+        
+        async function onImageLoaded(imgElement) {
+            originalFullImage = imgElement;
+            originalImageWidth = imgElement.width;
+            originalImageHeight = imgElement.height;
+            originalAspectRatio = imgElement.width / imgElement.height;
+            imageLoaded = true;
+            setStatusMessage(`📷 原图 ${originalImageWidth}×${originalImageHeight}，正在优化预览...`);
+            const previewImg = await buildOptimizedPreviewImage(originalFullImage, 1000);
+            optimizedPreviewImage = previewImg;
+            let initWidth = originalImageWidth;
+            if (initWidth > 1024) initWidth = 1024;
+            targetWidth = initWidth;
+            targetWidthInput.value = targetWidth;
+            updateHeightFromRatio(targetWidth);
+            updatePreviewCanvasSize();
+            refreshPreview();
+            setStatusMessage(`✅ 图片就绪 (${originalImageWidth}×${originalImageHeight}) | 实时调整圆角/尺寸`);
+        }
+        
+        function loadImageFromFile(file) {
+            if (!file) return;
+            // 非图片格式检测无弹窗
+            if (!file.type.startsWith('image/')) {
+                setStatusMessage('❌ 仅支持 JPG/PNG/WebP 图片文件', true);
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = async () => {
+                    await onImageLoaded(img);
+                };
+                img.src = e.target.result;
+            };
+            reader.onerror = () => {
+                setStatusMessage('图片读取失败，请重试', true);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // 高清导出 (完全移除下载接管，纯原生下载，无弹窗)
+        async function exportHighQuality() {
+            if (!imageLoaded || !originalFullImage) {
+                setStatusMessage('请先上传图片', true);
+                return;
+            }
+            const exportW = targetWidth;
+            const exportH = targetHeight;
+            if (exportW <= 0 || exportH <= 0) {
+                setStatusMessage('输出尺寸无效', true);
+                return;
+            }
+            setStatusMessage(`⏳ 生成高清图标 ${exportW}×${exportH} ...`);
+            try {
+                const exportCanvas = document.createElement('canvas');
+                exportCanvas.width = exportW;
+                exportCanvas.height = exportH;
+                const exportCtx = exportCanvas.getContext('2d');
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = exportW;
+                tempCanvas.height = exportH;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.imageSmoothingQuality = 'high';
+                tempCtx.drawImage(originalFullImage, 0, 0, exportW, exportH);
+                drawRoundedOnCanvas(exportCtx, exportW, exportH, tempCanvas, currentPercent, isCircle);
+                
+                const blob = await new Promise((resolve) => {
+                    exportCanvas.toBlob(resolve, 'image/png');
+                });
+                if (!blob) throw new Error('无法生成图片数据');
+                
+                const modeName = isCircle ? 'circle' : `radius${currentPercent}`;
+                const fileName = `icon_${modeName}_${exportW}x${exportH}.png`;
+                
+                // 传统下载方式 (完全移除外部接管)
+                const url = URL.createObjectURL(blob);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = url;
+                downloadLink.download = fileName;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(url);
+                
+                setStatusMessage(`✅ 已保存: ${fileName}`);
+                setTimeout(() => {
+                    if (imageLoaded) setStatusMessage(`✨ 图片已加载 (${originalImageWidth}×${originalImageHeight}) | 可继续调整`);
+                }, 2800);
+            } catch (err) {
+                console.error(err);
+                setStatusMessage(`❌ 导出失败: ${err.message || '未知错误'}`, true);
+            }
+        }
+        
+        function setRectMode() {
+            if (!isCircle) return;
+            isCircle = false;
+            rectModeBtn.classList.add('active');
+            circleModeBtn.classList.remove('active');
+            radiusSlider.disabled = false;
+            document.getElementById('radiusArea').style.opacity = '1';
+            if (imageLoaded) refreshPreview();
+            setStatusMessage('切换到圆角矩形模式', false);
+        }
+        
+        function setCircleMode() {
+            if (isCircle) return;
+            isCircle = true;
+            circleModeBtn.classList.add('active');
+            rectModeBtn.classList.remove('active');
+            radiusSlider.disabled = true;
+            document.getElementById('radiusArea').style.opacity = '0.6';
+            if (imageLoaded) refreshPreview();
+            setStatusMessage('切换到完全圆形模式 (圆角设置已忽略)', false);
+        }
+        
+        function updatePercent(value) {
+            currentPercent = Math.min(50, Math.max(0, value));
+            radiusSlider.value = currentPercent;
+            percentSpan.innerText = currentPercent + '%';
+            if (!isCircle && imageLoaded) refreshPreview();
+        }
+        
+        function initSmartWidthInput() {
+            targetWidthInput.addEventListener('input', function(e) {
+                if (isUpdatingFromCode) return;
+                let raw = e.target.value;
+                if (raw === '') return;
+                let digits = raw.replace(/[^\d]/g, '');
+                if (digits === '') return;
+                if (renderTimer) clearTimeout(renderTimer);
+                renderTimer = setTimeout(() => {
+                    let currentRaw = targetWidthInput.value;
+                    let finalDigits = currentRaw.replace(/[^\d]/g, '');
+                    if (finalDigits === '') return;
+                    let finalNum = parseInt(finalDigits, 10);
+                    if (!isNaN(finalNum) && finalNum >= 1) {
+                        applyTargetWidth(finalNum, true);
+                    }
+                    renderTimer = null;
+                }, 200);
+            });
+            targetWidthInput.addEventListener('blur', () => {
+                if (renderTimer) clearTimeout(renderTimer);
+                let raw = targetWidthInput.value;
+                if (raw === '') applyTargetWidth(targetWidth, true);
+                else {
                     let digits = raw.replace(/[^\d]/g, '');
-                    if (digits === '') return;
-                    if (renderTimer) clearTimeout(renderTimer);
-                    renderTimer = setTimeout(() => {
-                        let finalDigits = targetWidthInput.value.replace(/[^\d]/g, '');
-                        if (finalDigits === '') return;
-                        let finalNum = parseInt(finalDigits, 10);
-                        if (!isNaN(finalNum) && finalNum >= 1) {
-                            applyTargetWidth(finalNum, true);
-                        }
-                        renderTimer = null;
-                    }, 200);
-                });
-                targetWidthInput.addEventListener('blur', () => {
-                    if (renderTimer) clearTimeout(renderTimer);
-                    let raw = targetWidthInput.value;
-                    if (raw === '') applyTargetWidth(targetWidth, true);
-                    else {
-                        let digits = raw.replace(/[^\d]/g, '');
-                        let num = parseInt(digits, 10);
-                        if (!isNaN(num) && num >= 16) applyTargetWidth(num, true);
-                        else applyTargetWidth(targetWidth, true);
-                    }
-                });
-            }
-
-            // ---------- 事件绑定 ----------
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files && e.target.files[0]) loadImageFromFile(e.target.files[0]);
-            });
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.style.background = '#eff3fc';
-            });
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.style.background = '#fafcff';
-            });
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.style.background = '#fafcff';
-                const file = e.dataTransfer.files[0];
-                if (file && file.type.startsWith('image/')) loadImageFromFile(file);
-                else if (file) alert('请拖拽图片文件');
-            });
-            radiusSlider.addEventListener('input', (e) => {
-                if (!isCircle) updatePercent(parseInt(e.target.value, 10));
-            });
-            document.querySelectorAll('.preset-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    if (isCircle) {
-                        if (confirm('当前是完全圆形模式，是否切换到圆角矩形模式并应用该圆角？')) {
-                            setRectMode();
-                            const percent = parseInt(btn.getAttribute('data-percent'), 10);
-                            updatePercent(percent);
-                        }
-                    } else {
-                        const percent = parseInt(btn.getAttribute('data-percent'), 10);
-                        updatePercent(percent);
-                    }
-                });
-            });
-            resPresetBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    if (btn.id === 'resetToOriginalBtn') resetToOriginalSize();
-                    else {
-                        let widthVal = parseInt(btn.getAttribute('data-width'), 10);
-                        if (!isNaN(widthVal)) applyTargetWidth(widthVal, true);
-                    }
-                });
-            });
-            rectModeBtn.addEventListener('click', setRectMode);
-            circleModeBtn.addEventListener('click', setCircleMode);
-            downloadBtn.addEventListener('click', exportHighQuality);
-
-            // 初始占位设置
-            previewCanvas.width = 400;
-            previewCanvas.height = 400;
-            previewCtx.fillStyle = "#f8fafd";
-            previewCtx.fillRect(0, 0, 400, 400);
-            previewCtx.fillStyle = "#8ba0bc";
-            previewCtx.font = "14px system-ui";
-            previewCtx.textAlign = "center";
-            previewCtx.textBaseline = "middle";
-            previewCtx.fillText("⬆ 上传图片", 200, 200);
-
-            initSmartWidthInput();
-            applyTargetWidth(512, false);
-
-            // PWA Service Worker
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                    navigator.serviceWorker.register('./service-worker.js').catch(e => console.log('SW注册失败', e));
-                });
-            }
-
-            // 外部浏览器提示
-            function isMobileDevice() {
-                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            }
-
-            function showServiceModal() {
-                if (typeof webapp !== 'undefined' && isMobileDevice() && !sessionStorage.getItem('icon_maker_modal_shown')) {
-                    const url = window.location.href;
-                    const overlay = document.createElement('div');
-                    overlay.className = 'custom-modal-overlay';
-                    overlay.innerHTML =
-                        `<div class="custom-modal-card"><div class="modal-header">🔗 外部浏览器打开</div><div class="modal-body"><div class="modal-url-panel">${url.replace(/[&<>]/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' } [m]; })}</div><div class="modal-download-hint">📱 点击下方按钮使用浏览器打开，获得最佳性能</div></div><div class="modal-actions"><div class="modal-action-top"><button id="modalOpenBrowserBtn">🌐 浏览器打开</button></div><div class="modal-action-bottom"><button id="modalCopyMainBtn">📋 复制地址</button><button id="modalCloseBtn">关闭</button></div></div></div>`;
-                    document.body.appendChild(overlay);
-                    document.getElementById('modalOpenBrowserBtn')?.addEventListener('click', () => {
-                        if (typeof webapp !== 'undefined' && webapp.外部浏览器打开) webapp.外部浏览器打开(url);
-                        else window.open(url, '_blank');
-                        overlay.remove();
-                    });
-                    document.getElementById('modalCopyMainBtn')?.addEventListener('click', () => {
-                        navigator.clipboard?.writeText(url);
-                        showToast('地址已复制');
-                        overlay.remove();
-                    });
-                    document.getElementById('modalCloseBtn')?.addEventListener('click', () => overlay.remove());
-                    sessionStorage.setItem('icon_maker_modal_shown', 'true');
+                    let num = parseInt(digits, 10);
+                    if (!isNaN(num) && num >= 16) applyTargetWidth(num, true);
+                    else applyTargetWidth(targetWidth, true);
                 }
-            }
-            window.addEventListener('load', showServiceModal);
-        })();
-    </script>
+            });
+        }
+        
+        // ----- 事件绑定 -----
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) loadImageFromFile(e.target.files[0]);
+        });
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.background = '#eff3fc'; });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.style.background = '#fafcff'; });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '#fafcff';
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) loadImageFromFile(file);
+            else if (file) setStatusMessage('❌ 请拖拽图片文件 (JPG/PNG/WebP)', true);
+        });
+        radiusSlider.addEventListener('input', (e) => { if (!isCircle) updatePercent(parseInt(e.target.value, 10)); });
+        
+        // 预设圆角 (无弹窗，自动处理圆形模式切换友好)
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const percent = parseInt(btn.getAttribute('data-percent'), 10);
+                if (isCircle) {
+                    // 自动切回矩形模式并应用圆角（无任何confirm弹窗）
+                    setRectMode();
+                    updatePercent(percent);
+                    setStatusMessage(`已切换至圆角矩形，圆角 ${percent}%`, false);
+                } else {
+                    updatePercent(percent);
+                    setStatusMessage(`圆角已设为 ${percent}%`, false);
+                }
+            });
+        });
+        
+        resPresetBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.id === 'resetToOriginalBtn') resetToOriginalSize();
+                else {
+                    let widthVal = parseInt(btn.getAttribute('data-width'), 10);
+                    if (!isNaN(widthVal)) {
+                        applyTargetWidth(widthVal, true);
+                        setStatusMessage(`宽度设为 ${widthVal}px`, false);
+                    }
+                }
+            });
+        });
+        rectModeBtn.addEventListener('click', setRectMode);
+        circleModeBtn.addEventListener('click', setCircleMode);
+        downloadBtn.addEventListener('click', exportHighQuality);
+        
+        // 初始化预览画布
+        previewCanvas.width = 300;
+        previewCanvas.height = 300;
+        previewCtx.fillStyle = "#f8fafd";
+        previewCtx.fillRect(0, 0, 300, 300);
+        previewCtx.fillStyle = "#8ba0bc";
+        previewCtx.font = "14px system-ui";
+        previewCtx.textAlign = "center";
+        previewCtx.fillText("⬆ 上传图片", 150, 150);
+        
+        initSmartWidthInput();
+        applyTargetWidth(512, false);
+    })();
+</script>
 </body>
 </html>
