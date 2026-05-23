@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>圆角图标工坊</title>
+    <title>圆角图标工坊 · 比例精准版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #f2f5f9; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; padding: 2rem 1.5rem; color: #1e2f3e; }
@@ -57,7 +57,7 @@
 <div class="app-container">
     <div class="header">
         <h1>⚡ 圆角图标工坊</h1>
-        <p>无弹窗 · 实时圆角 | 等比缩放 | 高清导出</p>
+        <p>长图完美比例 · 无变形预览 | 圆角/圆形实时呈现</p>
     </div>
 
     <div class="workspace">
@@ -120,25 +120,25 @@
                     <span class="res-preset" id="resetToOriginalBtn">🔄 原图尺寸</span>
                 </div>
                 <div class="warning-tip" id="sizeWarnMsg" style="display: none;">⚠️ 移动端建议宽度 ≤ 1024px，过大可能导出较慢</div>
-                <div class="lock-hint">🔒 预览画布根据输出比例动态调整 · 导出生成高清PNG</div>
+                <div class="lock-hint">🔒 预览画布严格保持原始比例 | 高清导出不变形</div>
             </div>
 
             <button class="download-btn" id="downloadBtn">💾 导出 PNG 图标</button>
-            <div class="info-note">导出文件将保存至“下载”目录</div>
+            <div class="info-note">导出文件保存至“下载”目录，无弹窗无第三方接管</div>
         </div>
 
         <div class="preview-panel">
             <div class="preview-canvas-wrapper">
                 <canvas id="previewCanvas"></canvas>
             </div>
-            <div id="statusMsg" class="info-note" style="margin-top: 16px;">✨ 上传图片，圆角/尺寸实时预览 | 无弹窗设计</div>
+            <div id="statusMsg" class="info-note" style="margin-top: 16px;">✨ 上传图片，实时圆角预览 | 长图比例精准</div>
         </div>
     </div>
 </div>
 
 <script>
     (function(){
-        // DOM 元素
+        // ---------- DOM 元素 ----------
         const fileInput = document.getElementById('fileInput');
         const previewCanvas = document.getElementById('previewCanvas');
         const previewCtx = previewCanvas.getContext('2d');
@@ -155,59 +155,35 @@
         const sizeWarnMsg = document.getElementById('sizeWarnMsg');
         const statusMsgDiv = document.getElementById('statusMsg');
         
-        let originalFullImage = null;
-        let optimizedPreviewImage = null;
+        // ---------- 状态变量 ----------
+        let originalImage = null;           // 原始图片对象 (完整尺寸)
         let imageLoaded = false;
-        let originalAspectRatio = 1;
+        let originalAspectRatio = 1;        // 原始宽高比 (width/height)
         let originalImageWidth = 0, originalImageHeight = 0;
-        let targetWidth = 512;
-        let targetHeight = 512;
-        let isCircle = false;
-        let currentPercent = 22;
+        
+        let targetWidth = 512;              // 当前输出宽度 (px)
+        let targetHeight = 512;             // 当前输出高度 (自动等比)
+        
+        let isCircle = false;               // 圆形模式标志
+        let currentPercent = 22;            // 圆角百分比 (0-50)
         let renderTimer = null;
         let isUpdatingFromCode = false;
         
-        // 更新状态栏消息 (无弹窗)
+        // ---------- 辅助函数：更新状态栏 (无弹窗) ----------
         function setStatusMessage(msg, isError = false) {
             statusMsgDiv.innerHTML = msg;
             if (isError) {
                 setTimeout(() => {
                     if (statusMsgDiv.innerHTML === msg) {
-                        statusMsgDiv.innerHTML = imageLoaded ? `✅ 图片已加载 (${originalImageWidth}×${originalImageHeight}) | 可继续调整` : '✨ 上传图片，圆角/尺寸实时预览';
+                        statusMsgDiv.innerHTML = imageLoaded ? `✅ 图片已加载 (${originalImageWidth}×${originalImageHeight}) | 可继续调整` : '✨ 上传图片，实时圆角预览';
                     }
                 }, 2500);
-            } else if (!imageLoaded) {
-                // 保留普通消息
             }
         }
         
-        // 更新预览画布尺寸 (动态适应输出宽高比)
-        function updatePreviewCanvasSize() {
-            if (!imageLoaded) {
-                previewCanvas.width = 300;
-                previewCanvas.height = 300;
-                previewCanvas.style.width = 'auto';
-                previewCanvas.style.height = 'auto';
-                return;
-            }
-            const maxDim = 400;
-            let ratio = targetWidth / targetHeight;
-            let drawWidth, drawHeight;
-            if (ratio >= 1) {
-                drawWidth = maxDim;
-                drawHeight = maxDim / ratio;
-            } else {
-                drawHeight = maxDim;
-                drawWidth = maxDim * ratio;
-            }
-            previewCanvas.width = drawWidth;
-            previewCanvas.height = drawHeight;
-            previewCanvas.style.width = `${drawWidth}px`;
-            previewCanvas.style.height = `${drawHeight}px`;
-        }
-        
+        // ---------- 根据输出宽度自动计算高度 (保持原图比例) ----------
         function updateHeightFromRatio(widthVal) {
-            if (!imageLoaded || !originalAspectRatio) {
+            if (!imageLoaded || originalAspectRatio <= 0) {
                 targetHeight = widthVal;
                 autoHeightSpan.innerText = Math.round(targetHeight);
                 return targetHeight;
@@ -218,6 +194,7 @@
             return targetHeight;
         }
         
+        // 宽度限制 & 大尺寸警告
         const MAX_SAFE_WIDTH = 1024;
         function clampTargetWidth(w) {
             let clamped = Math.min(3000, Math.max(16, w));
@@ -229,6 +206,37 @@
             return clamped;
         }
         
+        // ---------- 核心：更新预览画布尺寸 (严格遵循输出宽高比，保证不形变) ----------
+        function updatePreviewCanvasSize() {
+            if (!imageLoaded) {
+                // 无图片时显示默认正方形占位
+                previewCanvas.width = 300;
+                previewCanvas.height = 300;
+                previewCanvas.style.width = '300px';
+                previewCanvas.style.height = '300px';
+                return;
+            }
+            // 预览容器最大边长限制 400px，保持输出比例 (targetWidth / targetHeight)
+            const maxDim = 400;
+            let ratio = targetWidth / targetHeight;
+            let drawWidth, drawHeight;
+            if (ratio >= 1) {
+                drawWidth = maxDim;
+                drawHeight = maxDim / ratio;
+            } else {
+                drawHeight = maxDim;
+                drawWidth = maxDim * ratio;
+            }
+            // 确保整数像素避免亚像素模糊
+            drawWidth = Math.round(drawWidth);
+            drawHeight = Math.round(drawHeight);
+            previewCanvas.width = drawWidth;
+            previewCanvas.height = drawHeight;
+            previewCanvas.style.width = `${drawWidth}px`;
+            previewCanvas.style.height = `${drawHeight}px`;
+        }
+        
+        // 应用新的输出宽度 (并触发预览刷新)
         function applyTargetWidth(widthVal, immediateRebuild = false) {
             let w = parseInt(widthVal, 10);
             if (isNaN(w)) return false;
@@ -236,25 +244,30 @@
             if (w === targetWidth && imageLoaded) return false;
             targetWidth = w;
             updateHeightFromRatio(targetWidth);
+            // 同步输入框的值 (避免循环)
             if (!isUpdatingFromCode && targetWidthInput.value !== String(targetWidth)) {
                 isUpdatingFromCode = true;
                 targetWidthInput.value = targetWidth;
                 isUpdatingFromCode = false;
             }
+            // 更新预览画布尺寸
             updatePreviewCanvasSize();
-            if (imageLoaded && immediateRebuild) {
-                if (renderTimer) clearTimeout(renderTimer);
-                refreshPreview();
-            } else if (imageLoaded) {
-                if (renderTimer) clearTimeout(renderTimer);
-                renderTimer = setTimeout(() => {
+            if (imageLoaded) {
+                if (immediateRebuild) {
+                    if (renderTimer) clearTimeout(renderTimer);
                     refreshPreview();
-                    renderTimer = null;
-                }, 160);
+                } else {
+                    if (renderTimer) clearTimeout(renderTimer);
+                    renderTimer = setTimeout(() => {
+                        refreshPreview();
+                        renderTimer = null;
+                    }, 150);
+                }
             }
             return true;
         }
         
+        // 重置为原始图片宽度
         function resetToOriginalSize() {
             if (!imageLoaded) return;
             let originalW = originalImageWidth;
@@ -262,21 +275,25 @@
             setStatusMessage(`↺ 恢复原图宽度 ${originalW}px`, false);
         }
         
-        // 绘制圆角/圆形裁剪函数
-        function drawRoundedOnCanvas(ctx, canvasWidth, canvasHeight, srcImg, radiusPercent, isCircleMode) {
-            if (!srcImg) return;
+        // ---------- 绘制函数 (圆角矩形 / 圆形裁剪) ----------
+        // 将源图像绘制到目标canvas，并应用圆角/圆形裁剪
+        function drawRoundedOnCanvas(ctx, canvasWidth, canvasHeight, sourceImg, radiusPercent, isCircleMode) {
+            if (!sourceImg) return;
             ctx.clearRect(0, 0, canvasWidth, canvasHeight);
             ctx.imageSmoothingQuality = 'high';
             ctx.save();
             if (isCircleMode) {
+                // 完全圆形：以中心为圆心，短边的一半为半径
                 const radius = Math.min(canvasWidth, canvasHeight) / 2;
                 const cx = canvasWidth / 2;
                 const cy = canvasHeight / 2;
                 ctx.beginPath();
                 ctx.arc(cx, cy, radius, 0, Math.PI * 2);
                 ctx.clip();
-                ctx.drawImage(srcImg, 0, 0, canvasWidth, canvasHeight);
+                // 绘制图片 (填满整个画布，由于比例一致不会变形)
+                ctx.drawImage(sourceImg, 0, 0, canvasWidth, canvasHeight);
             } else {
+                // 圆角矩形: 基于短边百分比计算圆角半径
                 const shortSide = Math.min(canvasWidth, canvasHeight);
                 let radiusPx = (radiusPercent / 100) * shortSide;
                 const maxRadius = shortSide / 2;
@@ -293,13 +310,14 @@
                 ctx.quadraticCurveTo(0, 0, radiusPx, 0);
                 ctx.closePath();
                 ctx.clip();
-                ctx.drawImage(srcImg, 0, 0, canvasWidth, canvasHeight);
+                ctx.drawImage(sourceImg, 0, 0, canvasWidth, canvasHeight);
             }
             ctx.restore();
         }
         
+        // ---------- 核心预览刷新 (直接使用原始图片，严格按预览画布尺寸绘制，杜绝变形) ----------
         function refreshPreview() {
-            if (!imageLoaded || !optimizedPreviewImage) {
+            if (!imageLoaded || !originalImage) {
                 previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
                 previewCtx.font = "14px system-ui";
                 previewCtx.fillStyle = "#8ba3bc";
@@ -309,48 +327,34 @@
             }
             const drawWidth = previewCanvas.width;
             const drawHeight = previewCanvas.height;
+            if (drawWidth <= 0 || drawHeight <= 0) return;
+            
+            // 创建一个临时canvas用于承载原始图片的缩放绘制 (保证绘制到目标尺寸)
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = drawWidth;
             tempCanvas.height = drawHeight;
             const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.drawImage(optimizedPreviewImage, 0, 0, drawWidth, drawHeight);
+            tempCtx.imageSmoothingQuality = 'high';
+            // 关键修复：直接将原始图片绘制到临时canvas，使其完全填满预览画布尺寸
+            // 由于 previewCanvas 的宽高比 = targetWidth/targetHeight = 原始宽高比，
+            // 因此原始图片经过拉伸/缩放后完全匹配比例，不会出现任何形变。
+            tempCtx.drawImage(originalImage, 0, 0, drawWidth, drawHeight);
+            
+            // 在预览canvas上应用圆角/圆形裁剪
             drawRoundedOnCanvas(previewCtx, drawWidth, drawHeight, tempCanvas, currentPercent, isCircle);
         }
         
-        // 构建轻量级预览图像 (保持清晰度 & 性能)
-        function buildOptimizedPreviewImage(originalImg, maxEdge = 1100) {
-            return new Promise((resolve) => {
-                const imgWidth = originalImg.width;
-                const imgHeight = originalImg.height;
-                let targetW = imgWidth;
-                let targetH = imgHeight;
-                const maxSide = Math.max(imgWidth, imgHeight);
-                if (maxSide > maxEdge) {
-                    const scale = maxEdge / maxSide;
-                    targetW = Math.round(imgWidth * scale);
-                    targetH = Math.round(imgHeight * scale);
-                }
-                const offCanvas = document.createElement('canvas');
-                offCanvas.width = targetW;
-                offCanvas.height = targetH;
-                const offCtx = offCanvas.getContext('2d');
-                offCtx.imageSmoothingQuality = 'high';
-                offCtx.drawImage(originalImg, 0, 0, targetW, targetH);
-                const optimizedImg = new Image();
-                optimizedImg.onload = () => resolve(optimizedImg);
-                optimizedImg.src = offCanvas.toDataURL('image/png');
-            });
-        }
-        
+        // ---------- 处理图片加载 (保留原始完整图像) ----------
         async function onImageLoaded(imgElement) {
-            originalFullImage = imgElement;
+            originalImage = imgElement;
             originalImageWidth = imgElement.width;
             originalImageHeight = imgElement.height;
             originalAspectRatio = imgElement.width / imgElement.height;
             imageLoaded = true;
-            setStatusMessage(`📷 原图 ${originalImageWidth}×${originalImageHeight}，正在优化预览...`);
-            const previewImg = await buildOptimizedPreviewImage(originalFullImage, 1000);
-            optimizedPreviewImage = previewImg;
+            
+            setStatusMessage(`📷 原图 ${originalImageWidth}×${originalImageHeight}，等比预览中...`);
+            
+            // 初始输出宽度：若原图过宽则限制到1024，否则使用原图宽度
             let initWidth = originalImageWidth;
             if (initWidth > 1024) initWidth = 1024;
             targetWidth = initWidth;
@@ -358,12 +362,11 @@
             updateHeightFromRatio(targetWidth);
             updatePreviewCanvasSize();
             refreshPreview();
-            setStatusMessage(`✅ 图片就绪 (${originalImageWidth}×${originalImageHeight}) | 实时调整圆角/尺寸`);
+            setStatusMessage(`✅ 图片就绪 (${originalImageWidth}×${originalImageHeight}) | 圆角/尺寸实时调整无变形`);
         }
         
         function loadImageFromFile(file) {
             if (!file) return;
-            // 非图片格式检测无弹窗
             if (!file.type.startsWith('image/')) {
                 setStatusMessage('❌ 仅支持 JPG/PNG/WebP 图片文件', true);
                 return;
@@ -374,17 +377,20 @@
                 img.onload = async () => {
                     await onImageLoaded(img);
                 };
+                img.onerror = () => {
+                    setStatusMessage('图片加载失败，请重试', true);
+                };
                 img.src = e.target.result;
             };
             reader.onerror = () => {
-                setStatusMessage('图片读取失败，请重试', true);
+                setStatusMessage('文件读取失败', true);
             };
             reader.readAsDataURL(file);
         }
         
-        // 高清导出 (完全移除下载接管，纯原生下载，无弹窗)
+        // ---------- 高清导出 (原生下载，无任何接管/弹窗) ----------
         async function exportHighQuality() {
-            if (!imageLoaded || !originalFullImage) {
+            if (!imageLoaded || !originalImage) {
                 setStatusMessage('请先上传图片', true);
                 return;
             }
@@ -400,12 +406,16 @@
                 exportCanvas.width = exportW;
                 exportCanvas.height = exportH;
                 const exportCtx = exportCanvas.getContext('2d');
+                exportCtx.imageSmoothingQuality = 'high';
+                
+                // 临时画布：先将原始图片缩放到导出尺寸 (保持比例)
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = exportW;
                 tempCanvas.height = exportH;
                 const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.imageSmoothingQuality = 'high';
-                tempCtx.drawImage(originalFullImage, 0, 0, exportW, exportH);
+                tempCtx.drawImage(originalImage, 0, 0, exportW, exportH);
+                
+                // 应用圆角/圆形裁剪
                 drawRoundedOnCanvas(exportCtx, exportW, exportH, tempCanvas, currentPercent, isCircle);
                 
                 const blob = await new Promise((resolve) => {
@@ -416,19 +426,19 @@
                 const modeName = isCircle ? 'circle' : `radius${currentPercent}`;
                 const fileName = `icon_${modeName}_${exportW}x${exportH}.png`;
                 
-                // 传统下载方式 (完全移除外部接管)
+                // 原生下载 (无任何第三方接管)
                 const url = URL.createObjectURL(blob);
-                const downloadLink = document.createElement('a');
-                downloadLink.href = url;
-                downloadLink.download = fileName;
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
                 setStatusMessage(`✅ 已保存: ${fileName}`);
                 setTimeout(() => {
-                    if (imageLoaded) setStatusMessage(`✨ 图片已加载 (${originalImageWidth}×${originalImageHeight}) | 可继续调整`);
+                    if (imageLoaded) setStatusMessage(`✨ 图片已加载 (${originalImageWidth}×${originalImageHeight}) | 继续编辑`);
                 }, 2800);
             } catch (err) {
                 console.error(err);
@@ -436,6 +446,7 @@
             }
         }
         
+        // ---------- 模式切换 ----------
         function setRectMode() {
             if (!isCircle) return;
             isCircle = false;
@@ -455,7 +466,7 @@
             radiusSlider.disabled = true;
             document.getElementById('radiusArea').style.opacity = '0.6';
             if (imageLoaded) refreshPreview();
-            setStatusMessage('切换到完全圆形模式 (圆角设置已忽略)', false);
+            setStatusMessage('切换到完全圆形模式', false);
         }
         
         function updatePercent(value) {
@@ -465,6 +476,7 @@
             if (!isCircle && imageLoaded) refreshPreview();
         }
         
+        // ---------- 智能宽度输入框防抖 ----------
         function initSmartWidthInput() {
             targetWidthInput.addEventListener('input', function(e) {
                 if (isUpdatingFromCode) return;
@@ -497,7 +509,7 @@
             });
         }
         
-        // ----- 事件绑定 -----
+        // ---------- 事件绑定 ----------
         fileInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) loadImageFromFile(e.target.files[0]);
         });
@@ -512,12 +524,11 @@
         });
         radiusSlider.addEventListener('input', (e) => { if (!isCircle) updatePercent(parseInt(e.target.value, 10)); });
         
-        // 预设圆角 (无弹窗，自动处理圆形模式切换友好)
+        // 圆角预设按钮 (无弹窗，若在圆形模式下自动切回矩形)
         document.querySelectorAll('.preset-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const percent = parseInt(btn.getAttribute('data-percent'), 10);
                 if (isCircle) {
-                    // 自动切回矩形模式并应用圆角（无任何confirm弹窗）
                     setRectMode();
                     updatePercent(percent);
                     setStatusMessage(`已切换至圆角矩形，圆角 ${percent}%`, false);
@@ -528,6 +539,7 @@
             });
         });
         
+        // 分辨率预设
         resPresetBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 if (btn.id === 'resetToOriginalBtn') resetToOriginalSize();
@@ -540,11 +552,12 @@
                 }
             });
         });
+        
         rectModeBtn.addEventListener('click', setRectMode);
         circleModeBtn.addEventListener('click', setCircleMode);
         downloadBtn.addEventListener('click', exportHighQuality);
         
-        // 初始化预览画布
+        // 初始化默认预览占位
         previewCanvas.width = 300;
         previewCanvas.height = 300;
         previewCtx.fillStyle = "#f8fafd";
