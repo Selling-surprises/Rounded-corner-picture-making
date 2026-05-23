@@ -1,0 +1,30 @@
+{
+  "name": "圆角图标工坊",
+  "short_name": "图标工坊",
+  "description": "专业圆角图标生成器，支持自定义分辨率和圆角，PWA离线可用",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#1e5a8a",
+  "background_color": "#f2f5f9",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "img/favicon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
