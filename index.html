@@ -319,23 +319,27 @@
             transform: scale(0.98);
         }
 
-        /* 预览画布固定最大尺寸，不再等于输出分辨率，性能大幅提升 */
+        /* 预览画布固定容器 + 自适应比例展示 (不再强制拉伸) */
         .preview-canvas-wrapper {
             background: repeating-conic-gradient(#f8fafd 0% 25%, #eef2f7 0% 50%) 50% / 20px 20px;
             border-radius: 20px;
             display: inline-flex;
-            padding: 8px;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
             box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.2);
+            min-width: 280px;
+            min-height: 280px;
         }
         canvas#previewCanvas {
             display: block;
-            width: auto;
+            width: 100%;
             height: auto;
-            max-width: 100%;
-            max-height: 360px;
+            max-width: 400px;
+            max-height: 400px;
             background: transparent;
             border-radius: 12px;
-            box-shadow: none;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.03);
         }
         .info-note {
             margin-top: 1rem;
@@ -350,7 +354,7 @@
             background: #e2e8f0;
         }
         
-        /* 模态弹窗样式 */
+        /* 模态弹窗样式 (保留原有) */
         .custom-modal-overlay {
             position: fixed;
             top: 0;
@@ -476,8 +480,8 @@
 <body>
 <div class="app-container">
     <div class="header">
-        <h1>⚡ 圆角图标工坊</h1>
-        <p>移动端大图优化 · 预览/导出分离 · 不卡顿不崩溃</p>
+        <h1>⚡ 圆角图标工坊 · 长图优化</h1>
+        <p>完美预览长图/方图 | 比例真实无拉伸 | 导出高清不卡顿</p>
     </div>
 
     <div class="workspace">
@@ -543,19 +547,19 @@
                 </div>
                 <div class="warning-tip" id="sizeWarnMsg" style="display: none;">⚠️ 移动端建议宽度 ≤ 1024px，过大可能导出较慢</div>
                 <div class="lock-hint">
-                    🔒 预览画布已固定大小，绝不卡死 · 导出时生成高清图
+                    🔒 预览按比例显示真实圆角效果 · 长图完整展示无拉伸
                 </div>
             </div>
 
             <button class="download-btn" id="downloadBtn">💾 导出 PNG 图标</button>
-            <div class="info-note">导出时采用原始图片高清渲染，预览特效实时无损体验</div>
+            <div class="info-note">导出时采用原始图片高清渲染，预览特效真实比例</div>
         </div>
 
         <div class="preview-panel">
             <div class="preview-canvas-wrapper">
                 <canvas id="previewCanvas" width="400" height="400" style="width:100%; height:auto; max-width:400px; aspect-ratio:1/1;"></canvas>
             </div>
-            <div id="statusMsg" class="info-note" style="margin-top: 16px;">✨ 上传图片，调整尺寸实时预览 | 流畅不卡顿</div>
+            <div id="statusMsg" class="info-note" style="margin-top: 16px;">✨ 上传图片，自动适配长图比例 | 实时预览不拉伸</div>
         </div>
     </div>
 </div>
@@ -581,7 +585,7 @@
         
         // ---------- 核心变量 ----------
         let originalFullImage = null;      // 原始完整图片 (用于导出)
-        let optimizedPreviewImage = null;  // 优化后的预览图片（最大边不超过1200px，用于实时绘制）
+        let optimizedPreviewImage = null;  // 优化后的预览图片（最大边不超过1200，比例保持）
         let imageLoaded = false;
         let originalAspectRatio = 1;
         let originalImageWidth = 0, originalImageHeight = 0;
@@ -595,10 +599,10 @@
         let renderTimer = null;
         let isUpdatingFromCode = false;
         
-        // 固定预览画布尺寸 (保证轻量, 不再随输出尺寸变化)
-        const PREVIEW_FIXED_SIZE = 400;
-        previewCanvas.width = PREVIEW_FIXED_SIZE;
-        previewCanvas.height = PREVIEW_FIXED_SIZE;
+        // 固定预览画布容器最大尺寸 (逻辑尺寸不变，但绘制时自适应比例)
+        const PREVIEW_MAX_SIZE = 400;  // 预览画布宽高均为400px（固定矩形）
+        previewCanvas.width = PREVIEW_MAX_SIZE;
+        previewCanvas.height = PREVIEW_MAX_SIZE;
         
         // ---------- 辅助函数 ----------
         function showToast(msg) {
@@ -622,7 +626,6 @@
             return targetHeight;
         }
         
-        // 限制最大导出宽度 (移动端安全范围，最大可至2048但会警告)
         const MAX_SAFE_WIDTH = 1024;
         function clampTargetWidth(w) {
             let clamped = Math.min(3000, Math.max(16, w));
@@ -634,7 +637,6 @@
             return clamped;
         }
         
-        // 应用目标宽度 (纯数据层更新)
         function applyTargetWidth(widthVal, immediateRebuild = false) {
             let w = parseInt(widthVal, 10);
             if (isNaN(w)) return false;
@@ -655,23 +657,29 @@
                 renderTimer = setTimeout(() => {
                     refreshPreview();
                     renderTimer = null;
-                }, 180);
+                }, 160);
             }
             return true;
         }
         
-        // 重置为原始图片尺寸（等比例宽）
         function resetToOriginalSize() {
             if (!imageLoaded) return;
             let originalW = originalImageWidth;
             applyTargetWidth(originalW, true);
         }
         
-        // ----- 核心绘图函数：在指定canvas上绘制圆角/圆形 (基于源图像 srcImg, 输出尺寸 w,h)
+        /**
+         * 在任意画布上绘制圆角矩形/圆形图像 (用于导出和临时绘制)
+         * ctx: 目标上下文
+         * canvasWidth, canvasHeight: 画布尺寸
+         * srcImg: 源图像 (已缩放至与画布相同比例更好，但此函数会直接拉伸绘制覆盖)
+         * radiusPercent: 圆角百分比(基于短边)
+         * isCircleMode: 圆形模式
+         */
         function drawRoundedOnCanvas(ctx, canvasWidth, canvasHeight, srcImg, radiusPercent, isCircleMode) {
             if (!srcImg) return;
             ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-            ctx.imageSmoothingQuality = 'low';
+            ctx.imageSmoothingQuality = 'high';
             if (isCircleMode) {
                 const radius = Math.min(canvasWidth, canvasHeight) / 2;
                 const cx = canvasWidth / 2;
@@ -705,32 +713,97 @@
             }
         }
         
-        // 刷新预览：基于optimizedPreviewImage绘制到固定画布上（模拟输出效果，按比例展示）
+        // ★★★ 核心优化: 完美支持长图、方图预览 —— 不拉伸，比例完整，圆角/圆形视觉一致 ★★★
         function refreshPreview() {
             if (!imageLoaded || !optimizedPreviewImage) {
-                previewCtx.clearRect(0, 0, PREVIEW_FIXED_SIZE, PREVIEW_FIXED_SIZE);
+                previewCtx.clearRect(0, 0, PREVIEW_MAX_SIZE, PREVIEW_MAX_SIZE);
                 previewCtx.font = "14px system-ui";
                 previewCtx.fillStyle = "#8ba3bc";
                 previewCtx.textAlign = "center";
-                previewCtx.fillText("📸 等待图片", PREVIEW_FIXED_SIZE/2, PREVIEW_FIXED_SIZE/2);
+                previewCtx.fillText("📸 等待图片", PREVIEW_MAX_SIZE/2, PREVIEW_MAX_SIZE/2);
                 return;
             }
-            // 预览画布固定尺寸，但需要展示最终效果的样式（按比例填充，模拟圆角比例）
-            // 为了精确预览圆角和圆形，我们基于optimizedPreviewImage绘制到预览画布，让预览效果直观反映输出形状
-            // 先将optimizedPreviewImage缩放到充满预览画布（保持比例裁剪？保证不变形）
-            const previewW = PREVIEW_FIXED_SIZE;
-            const previewH = PREVIEW_FIXED_SIZE;
-            // 创建一个临时离屏用于缩放预览图片至目标比例（由于optimizedPreviewImage比例与输出比例一致，直接拉伸）
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = previewW;
-            tempCanvas.height = previewH;
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.drawImage(optimizedPreviewImage, 0, 0, previewW, previewH);
-            // 然后应用圆角或圆形裁剪
-            drawRoundedOnCanvas(previewCtx, previewW, previewH, tempCanvas, currentPercent, isCircle);
+            
+            // 获取最终输出的宽高比 (基于原始比例)
+            const outW = targetWidth;
+            const outH = targetHeight;
+            if (outW <= 0 || outH <= 0) return;
+            const outputRatio = outW / outH;
+            
+            // 计算在固定预览区域 (PREVIEW_MAX_SIZE x PREVIEW_MAX_SIZE) 内保持比例的最大绘制区域
+            let drawWidth, drawHeight, offsetX, offsetY;
+            if (outputRatio >= 1) {
+                // 宽图或方形：宽度撑满，高度按比例
+                drawWidth = PREVIEW_MAX_SIZE;
+                drawHeight = PREVIEW_MAX_SIZE / outputRatio;
+                offsetX = 0;
+                offsetY = (PREVIEW_MAX_SIZE - drawHeight) / 2;
+            } else {
+                // 长图（高度>宽度）：高度撑满，宽度按比例
+                drawHeight = PREVIEW_MAX_SIZE;
+                drawWidth = PREVIEW_MAX_SIZE * outputRatio;
+                offsetX = (PREVIEW_MAX_SIZE - drawWidth) / 2;
+                offsetY = 0;
+            }
+            
+            // 边界安全取整
+            drawWidth = Math.max(1, Math.floor(drawWidth));
+            drawHeight = Math.max(1, Math.floor(drawHeight));
+            
+            // 1. 创建一个离屏画布，尺寸完全等于预览实际绘制区域（drawWidth x drawHeight）
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = drawWidth;
+            offCanvas.height = drawHeight;
+            const offCtx = offCanvas.getContext('2d');
+            
+            // 2. 清空并绘制图片 (optimizedPreviewImage 保持原始比例，直接拉伸到目标区域，由于比例与输出一致，内容完全不变形)
+            offCtx.clearRect(0, 0, drawWidth, drawHeight);
+            offCtx.imageSmoothingQuality = 'high';
+            offCtx.drawImage(optimizedPreviewImage, 0, 0, drawWidth, drawHeight);
+            
+            // 3. 根据当前模式二次绘制（圆角裁剪或圆形裁剪）应用到 offCanvas 上
+            //   注意：圆角百分比基于最终输出短边的百分比，预览时保持相同视觉百分比
+            if (isCircle) {
+                // 圆形模式：基于 offCanvas 的短边做正圆裁剪
+                const radius = Math.min(drawWidth, drawHeight) / 2;
+                const cx = drawWidth / 2;
+                const cy = drawHeight / 2;
+                offCtx.save();
+                offCtx.beginPath();
+                offCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+                offCtx.clip();
+                // 再次绘制图片确保clip生效
+                offCtx.drawImage(optimizedPreviewImage, 0, 0, drawWidth, drawHeight);
+                offCtx.restore();
+            } else {
+                // 圆角矩形模式：计算圆角半径 (相对于当前绘制区域的短边)
+                const shortSide = Math.min(drawWidth, drawHeight);
+                let radiusPx = (currentPercent / 100) * shortSide;
+                const maxRadius = shortSide / 2;
+                radiusPx = Math.min(radiusPx, maxRadius);
+                offCtx.save();
+                offCtx.beginPath();
+                offCtx.moveTo(radiusPx, 0);
+                offCtx.lineTo(drawWidth - radiusPx, 0);
+                offCtx.quadraticCurveTo(drawWidth, 0, drawWidth, radiusPx);
+                offCtx.lineTo(drawWidth, drawHeight - radiusPx);
+                offCtx.quadraticCurveTo(drawWidth, drawHeight, drawWidth - radiusPx, drawHeight);
+                offCtx.lineTo(radiusPx, drawHeight);
+                offCtx.quadraticCurveTo(0, drawHeight, 0, drawHeight - radiusPx);
+                offCtx.lineTo(0, radiusPx);
+                offCtx.quadraticCurveTo(0, 0, radiusPx, 0);
+                offCtx.closePath();
+                offCtx.clip();
+                offCtx.drawImage(optimizedPreviewImage, 0, 0, drawWidth, drawHeight);
+                offCtx.restore();
+            }
+            
+            // 4. 将最终离屏图像绘制到预览canvas的正确位置（居中）
+            previewCtx.clearRect(0, 0, PREVIEW_MAX_SIZE, PREVIEW_MAX_SIZE);
+            previewCtx.drawImage(offCanvas, offsetX, offsetY, drawWidth, drawHeight);
         }
         
-        // 生成优化的预览图片 (基于原始完整图，缩放到合理尺寸，最大边不超过 1200，保证流畅)
+        // 生成优化的预览图片 (基于原始完整图，缩放到合理尺寸，最大边不超过 1200，保证流畅并保留细节)
         function buildOptimizedPreviewImage(originalImg, maxEdge = 1200) {
             return new Promise((resolve) => {
                 const imgWidth = originalImg.width;
@@ -747,7 +820,7 @@
                 offCanvas.width = targetW;
                 offCanvas.height = targetH;
                 const offCtx = offCanvas.getContext('2d');
-                offCtx.imageSmoothingQuality = 'low';
+                offCtx.imageSmoothingQuality = 'high';
                 offCtx.drawImage(originalImg, 0, 0, targetW, targetH);
                 const optimizedImg = new Image();
                 optimizedImg.onload = () => resolve(optimizedImg);
@@ -764,23 +837,21 @@
             imageLoaded = true;
             
             statusMsgDiv.innerHTML = `📷 原图 ${originalImageWidth}×${originalImageHeight}，正在优化预览...`;
-            // 生成预览优化图 (限制最大边1000，保证滑动滑块丝滑)
+            // 生成预览优化图 (限制最大边1000，保证滑块丝滑)
             const previewImg = await buildOptimizedPreviewImage(originalFullImage, 1000);
             optimizedPreviewImage = previewImg;
             
-            // 设置默认目标宽度: 原图宽度不大于1024则用原宽，否则用1024
+            // 设置默认目标宽度: 原图宽度不大于1024则用原宽，否则用1024，确保预览比例正确
             let initWidth = originalImageWidth;
             if (initWidth > 1024) initWidth = 1024;
             targetWidth = initWidth;
             targetWidthInput.value = targetWidth;
             updateHeightFromRatio(targetWidth);
             
-            // 刷新预览
             refreshPreview();
-            statusMsgDiv.innerHTML = `✅ 图片就绪 (${originalImageWidth}×${originalImageHeight}) | 实时编辑流畅输出`;
+            statusMsgDiv.innerHTML = `✅ 图片就绪 (${originalImageWidth}×${originalImageHeight}) | 长图自适应预览 | 圆角实时可见`;
         }
         
-        // 加载用户图片文件
         function loadImageFromFile(file) {
             if (!file) return;
             const reader = new FileReader();
@@ -794,7 +865,7 @@
             reader.readAsDataURL(file);
         }
         
-        // 导出最终高清图：基于原始全尺寸图、目标宽高、圆角模式生成最终的PNG并下载
+        // 导出高清图 (原有逻辑，稳定可靠)
         async function exportHighQuality() {
             if (!imageLoaded || !originalFullImage) {
                 alert('请先上传图片');
@@ -806,29 +877,21 @@
                 alert('输出尺寸无效');
                 return;
             }
-            // 显示导出中提示
             const originalStatus = statusMsgDiv.innerHTML;
             statusMsgDiv.innerHTML = `⏳ 正在生成高清图标 ${exportW}×${exportH} ... 请稍后`;
             try {
-                // 创建离屏画布，基于原始图片绘制最终效果
                 const exportCanvas = document.createElement('canvas');
                 exportCanvas.width = exportW;
                 exportCanvas.height = exportH;
                 const exportCtx = exportCanvas.getContext('2d');
-                // 先将原始图片缩放到目标尺寸 (保留细节)
-                exportCtx.drawImage(originalFullImage, 0, 0, exportW, exportH);
-                // 再应用圆角裁剪 (需要基于刚绘制的图像内容)
-                // 因为上面已经绘制了完整图像，再应用clip二次绘制会有问题，需要重新clip后drawImage, 更好的方式：用临时画布
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = exportW;
                 tempCanvas.height = exportH;
                 const tempCtx = tempCanvas.getContext('2d');
                 tempCtx.drawImage(originalFullImage, 0, 0, exportW, exportH);
-                // 清空最终画布再应用圆角裁剪绘制
                 exportCtx.clearRect(0, 0, exportW, exportH);
                 drawRoundedOnCanvas(exportCtx, exportW, exportH, tempCanvas, currentPercent, isCircle);
                 
-                // 下载
                 const link = document.createElement('a');
                 const dataURL = exportCanvas.toDataURL('image/png');
                 const modeName = isCircle ? 'circle' : `radius${currentPercent}`;
@@ -846,7 +909,6 @@
             }
         }
         
-        // 模式切换
         function setRectMode() {
             if (!isCircle) return;
             isCircle = false;
@@ -876,7 +938,6 @@
             }
         }
         
-        // 智能宽度输入处理
         function initSmartWidthInput() {
             targetWidthInput.addEventListener('input', function(e) {
                 if (isUpdatingFromCode) return;
@@ -952,25 +1013,23 @@
         circleModeBtn.addEventListener('click', setCircleMode);
         downloadBtn.addEventListener('click', exportHighQuality);
         
-        // 初始预览占位
+        // 初始占位
         previewCtx.fillStyle = "#f8fafd";
-        previewCtx.fillRect(0, 0, PREVIEW_FIXED_SIZE, PREVIEW_FIXED_SIZE);
+        previewCtx.fillRect(0, 0, PREVIEW_MAX_SIZE, PREVIEW_MAX_SIZE);
         previewCtx.fillStyle = "#8ba0bc";
         previewCtx.font = "14px system-ui";
         previewCtx.textAlign = "center";
-        previewCtx.fillText("⬆ 上传图片", PREVIEW_FIXED_SIZE/2, PREVIEW_FIXED_SIZE/2);
+        previewCtx.fillText("⬆ 上传图片", PREVIEW_MAX_SIZE/2, PREVIEW_MAX_SIZE/2);
         
         initSmartWidthInput();
         applyTargetWidth(512, false);
         
-        // PWA service worker 注册
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('./service-worker.js').catch(e => console.log('SW注册失败', e));
             });
         }
         
-        // 移动端外链提示
         function isMobileDevice() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
         function showServiceModal() {
             if (typeof webapp !== 'undefined' && isMobileDevice() && !sessionStorage.getItem('icon_maker_modal_shown')) {
