@@ -6,6 +6,31 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    
+    <!-- ========== 标准网页图标 (favicon) 与 UWP / PWA 图标配置 ========== -->
+    <!-- 基础 favicon 多尺寸 (现代浏览器直接使用 PNG) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-128.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="img/favicon-128.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="img/favicon-512.png">
+    
+    <!-- Apple Touch Icon (iOS / iPadOS 主屏幕图标) -->
+    <link rel="apple-touch-icon" href="img/favicon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/favicon-192.png">
+    
+    <!-- Windows 磁贴 (UWP / Windows 开始菜单) 专用图标与颜色 -->
+    <meta name="msapplication-TileImage" content="img/favicon-512.png">
+    <meta name="msapplication-TileColor" content="#1e5a8a">
+    <meta name="msapplication-config" content="">
+    <meta name="application-name" content="圆角图标工坊">
+    <meta name="msapplication-tooltip" content="专业圆角图标生成器，支持自定义分辨率和圆角">
+    
+    <!-- 浏览器主题色 (与 PWA manifest 保持一致) -->
+    <meta name="theme-color" content="#1e5a8a">
+    
+    <!-- PWA Manifest 链接 (使应用可安装，成为 UWP / PWA 应用) -->
+    <link rel="manifest" href="./manifest.json">
+    
     <title>圆角图标工坊</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -55,14 +80,14 @@
         .info-note { margin-top: 1rem; font-size: 0.7rem; color: #6b85a0; text-align: center; }
         @media (max-width: 700px) { body { padding: 1rem; } .controls-panel, .preview-panel { padding: 1.2rem; } }
     </style>
-    <!-- 版本标识 v=2.0 防止缓存 -->
-    <script>console.log("圆角工坊v2.0");</script>
+    <!-- 版本标识 v=2.1 (支持 UWP 图标与服务工人注册) -->
+    <script>console.log("圆角工坊v2.1 - 网页图标+UWP+PWA全支持");</script>
 </head>
 <body>
 <div class="app-container">
     <div class="header">
         <h1>⚡ 圆角图标工坊</h1>
-        <p>长图完美比例 · 无变形预览 | 圆角/圆形实时生成</p>
+        <p>长图完美比例 · 无变形预览 | 圆角/圆形实时生成 | 支持安装为应用 (PWA/UWP风格)</p>
     </div>
 
     <div class="workspace">
@@ -129,7 +154,7 @@
             </div>
 
             <button class="download-btn" id="downloadBtn">💾 导出 PNG 图标</button>
-            <div class="info-note">导出文件保存至“下载”目录 | 无弹窗无第三方接管</div>
+            <div class="info-note">导出文件保存至“下载”目录 | 可安装为应用 (UWP风格 离线可用)</div>
         </div>
 
         <div class="preview-panel">
@@ -539,9 +564,28 @@
         initSmartWidthInput();
         applyTargetWidth(512, false);
         
-        // 输出版本信息到控制台，便于排查缓存
-        console.log("圆角图标工坊 v2.0 已加载 (比例完美版)");
+        console.log("圆角图标工坊 v2.1 已加载 (完整PWA+UWP图标支持)");
     })();
+</script>
+
+<!-- ========== Service Worker 注册 (PWA核心，使应用离线可用/UWP风格) ========== -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('./service-worker.js').then(function(registration) {
+                console.log('Service Worker 注册成功，作用域: ', registration.scope);
+                // 可选: 向用户提示可安装 PWA (UWP风格)
+                let isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+                if (!isStandalone && registration.installing) {
+                    console.log('PWA 可安装，用户可添加至主屏幕/UWP环境');
+                }
+            }).catch(function(error) {
+                console.error('Service Worker 注册失败: ', error);
+            });
+        });
+    } else {
+        console.log('当前浏览器不支持 Service Worker，PWA离线功能不可用，但核心功能正常');
+    }
 </script>
 </body>
 </html>
